@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset = "UTF-8">
+    <title>登入頁面</title>
+    <link rel="stylesheet" href="{% static 'plugins/bootstrap-3.4.1/css/bootstrap.css' %}">
+    <style>
+        .account {
+            width: 400px;
+            border: 1px solid #dddddd;
+            border-radius: 5px;
+            box-shadow: 5px 5px 20px #aaa;
+
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: 100px;
+            padding: 20px 40px;
+        }
+
+        .account h2 {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class = "account">
+        <h2>用戶登入</h2>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            <div class="form-group">
+                <label>用戶名</label>
+                {{form.name}}
+                <span style="color: red;"></span>
+            </div>
+            <div>
+                <label>密碼</label>
+                {{form.password}}
+                <span style="color: red;"></span>
+            </div>
+            <br/>
+            
+            <input type= "submit" value="登入" class="btn btn-primary"> 
+        </form>
+    </div>
+</body>
+</html>

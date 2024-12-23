@@ -1,0 +1,473 @@
+{% extends 'layout.html' %}
+
+{% block fun %}
+<li><a href="/engineer/upload" style="color: black;">資料上傳區</a></li>
+<li><a href="/engineer/visualization" style="color: black;">資料視覺化</a></li>
+<li><a href="/engineer/model/page" style="color: black;">模型預測</a></li>
+
+{% endblock %}
+
+{% block css %}
+<style>
+    .panel-body {
+        background-color: black;
+    }
+
+    body {
+        background-color: black;
+    }
+</style>
+{% endblock %}
+
+
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-12"
+            style="margin-top: 100px; border-color: white; border-width: 1px; border-style: solid;display: flex; justify-content: center; align-items: center;">
+            <div id="imbalance_chart"></div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 100px;">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid;display: flex; justify-content: center; align-items: center;">
+            <div id="sex_disease_chart"></div>
+        </div>
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid;display: flex; justify-content: center; align-items: center;">
+            <div id="chest_pain_chart"></div>
+        </div>
+    </div>
+
+    <div class="row" style="margin-top: 100px;">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="cfeatureTarget_chart1"></div>
+        </div>
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="cfeatureTarget_chart2"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="cfeatureTarget_chart3"></div>
+        </div>
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="cfeatureTarget_chart4"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="cfeatureTarget_chart5"></div>
+        </div>
+    </div>
+
+    <div style="margin-top: 100px; display: flex; justify-content: center; align-items: center;"><span
+            style="color: white; font-size: 25px;">單一特徵盒鬚圖</span></div>
+
+    <div class="row" style="margin-top: 100px;">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="box_plot_chart1"></div>
+        </div>
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="box_plot_chart2"></div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-sm-6"
+            style="border-color: white; border-width: 1px; border-style: solid; display: flex; justify-content: center; align-items: center;">
+            <div id="box_plot_chart3"></div>
+        </div>
+    </div>
+
+
+
+
+
+</div>
+{% endblock %}
+
+{% block js %}
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/highcharts-more.js"></script>
+<script type="text/javascript">
+    $(function () {
+        initImbalance();
+        initSexDisease();
+        initChestPain();
+        initBoxPlot();
+        initCFeatureTarget();
+    })
+
+
+    //資料集是否平衡-圓餅圖
+    function initImbalance() {
+        $.ajax({
+            url: "/engineer/chart/imbalance/",
+            type: "get",
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    Highcharts.chart('imbalance_chart', {
+                        chart: {
+                            type: 'pie',
+                            backgroundColor: 'black',
+                        },
+                        title: {
+                            text: '資料集是否平衡?',
+                            style: {
+                                fontSize: '25px',
+                                color: 'white'
+                            }
+                        },
+                        tooltip: {
+                            valueSuffix: '%',
+                            style: {
+                                fontSize: '20px',
+                            }
+                        },
+                        plotOptions: {
+                            series: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: [{
+                                    enabled: true,
+                                    style: {
+                                        fontSize: '25px'
+                                    },
+                                    distance: 20
+                                }, {
+                                    enabled: true,
+                                    distance: -90,
+                                    format: '{point.percentage:.1f}%',
+                                    style: {
+                                        fontSize: '20px',
+                                        textOutline: 'none',
+                                        color: "black",
+                                        opacity: 0.7
+                                    },
+                                    filter: {
+                                        operator: '>',
+                                        property: 'percentage',
+                                        value: 10
+                                    }
+                                }]
+                            }
+                        },
+                        series: [
+                            {
+                                name: 'Percentage',
+                                colorByPoint: true,
+                                data: res.data
+                            }
+                        ]
+                    });
+
+                }
+            }
+        })
+    }
+
+    function drawColumn(location,categories, title, series) {
+        Highcharts.chart(location, {
+            chart: {
+                type: 'column',
+                style: {
+
+                },
+                backgroundColor: 'black',
+            },
+            title: {
+                text: title,
+                style: {
+                    fontSize: '25px',
+                    color: 'white'
+                },
+            },
+            xAxis: {
+                categories: categories,
+                crosshair: true,
+                labels: {
+                    style: {
+                        fontSize: '20px',
+                        color: "white"
+                    }
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: '數量',
+                    style: {
+                        fontSize: '20px',
+                        color: "white"
+                    }
+                },
+                labels: {
+                    style: {
+                        fontSize: '20px',
+                        color: "white"
+                    }
+                }
+            },
+            tooltip: {
+                style: {
+                    fontSize: '20px',
+                }
+            },
+            plotOptions: {
+                column: {
+                    pointPadding: 0.2,
+                    borderWidth: 0
+                }
+            },
+            series: series,
+            legend: {
+                itemStyle: {
+                    fontSize: '18px',
+                    color: 'white'
+                },
+                itemHoverStyle: {
+                    color: 'orange'
+                },
+            }
+        });
+    }
+
+    //男、女性患有心臟病之分佈
+    function initSexDisease() {
+        $.ajax({
+            url: "/engineer/chart/sexDisease/",
+            type: "get",
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    drawColumn("sex_disease_chart",res.categories,res.title, res.series);
+                }
+            }
+        })
+    }
+
+    //男、女性胸口疼痛類型分佈
+    function initChestPain() {
+        $.ajax({
+            url: "/engineer/chart/chestPain/",
+            type: "get",
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    drawColumn("chest_pain_chart",res.categories,res.title, res.series);
+                }
+            }
+        })
+    }
+
+    //畫出單一特徵盒鬚圖
+    function drawBoxPlot(feature, data, location) {
+
+        Highcharts.chart(location, {
+
+            chart: {
+                type: 'boxplot',
+                width: 500,
+                backgroundColor: 'black'
+
+            },
+
+            title: {
+                text: feature,
+                style: {
+                    color: 'white',
+                    fontSize: '25px',
+                    fontWeight: 'bold',
+                }
+            },
+
+            legend: {
+                enabled: false
+            },
+
+            xAxis: {
+                categories: feature,
+                title: {
+                    text: feature,
+                    style: {
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                    }
+                },
+                lineColor: 'white',
+                gridLineColor: 'white',
+                labels: {
+                    style: {
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                    }
+                }
+            },
+
+            yAxis: {
+                title: {
+                    text: 'Value',
+                    style: {
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                    }
+                },
+                lineColor: 'white',
+                gridLineColor: 'white',
+                labels: {
+                    style: {
+                        color: 'white',
+                        fontSize: '18px',
+                        fontWeight: 'bold',
+                    }
+                }
+            },
+
+            series: [{
+                name: 'Observations',
+                data: [data],
+                tooltip: {
+                    headerFormat: '<em>Experiment No {point.key}</em><br/>'
+                },
+                color: 'orange',  // 设置盒子框线的颜色
+                fillColor: 'black',  // 设置盒子的填充颜色
+                lineWidth: 2,  // 设置盒子框线的宽度
+                medianColor: 'orange',  // 设置中位数线的颜色
+                medianWidth: 3,  // 设置中位数线的宽度
+                whiskerColor: 'orange',  // 设置须（Whisker）的颜色
+                whiskerWidth: 2,  // 设置须的宽度
+            }, {
+                name: 'Outliers',
+                color: Highcharts.getOptions().colors[0],
+                type: 'scatter',
+                data: [ // x, y positions where 0 is the first category
+                ],
+                marker: {
+                    fillColor: 'orange',
+                    lineWidth: 1,
+                    lineColor: Highcharts.getOptions().colors[0]
+                },
+                tooltip: {
+                    pointFormat: 'Observation: {point.y}'
+                }
+            }]
+
+        });
+
+    }
+
+
+    //單一特徵盒鬚圖
+    function initBoxPlot() {
+        $.ajax({
+            url: "/engineer/chart/boxplot/",
+            type: "get",
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    for (let i = 0; i < res.data.length; ++i) {
+                        drawBoxPlot(res.feature[i], res.data[i], "box_plot_chart" + String(i + 1));
+                    }
+                }
+            }
+        })
+    }
+
+
+    function drawCFeatureTargetPie(index, title, data) {
+        Highcharts.chart('cfeatureTarget_chart' + String(index), {
+            chart: {
+                type: 'pie',
+                backgroundColor: 'black',
+            },
+            title: {
+                text: title,
+                style: {
+                    fontSize: '25px',
+                    color: 'white'
+                }
+            },
+            tooltip: {
+                valueSuffix: '%',
+                style: {
+                    fontSize: '20px',
+                }
+            },
+            plotOptions: {
+                series: {
+                    allowPointSelect: true,
+                    cursor: 'pointer',
+                    dataLabels: [{
+                        enabled: true,
+                        style: {
+                            fontSize: '20px'
+                        },
+                        distance: 20
+                    }, {
+                        enabled: true,
+                        distance: -30,
+                        format: '{point.percentage:.1f}%',
+                        style: {
+                            fontSize: '18px',
+                            textOutline: 'none',
+                            color: "black",
+                            opacity: 0.7
+                        },
+                    }]
+                }
+            },
+            series: [
+                {
+                    name: 'Percentage',
+                    colorByPoint: true,
+                    data: data
+                }
+            ]
+        });
+    }
+
+
+
+
+    function initCFeatureTarget() {
+        $.ajax({
+            url: "/engineer/chart/cfeatureTarget/",
+            type: "get",
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    for (let i = 0; i < res.data_list.length; ++i) {
+                        drawCFeatureTargetPie(i + 1, res.titles[i], res.data_list[i]);
+                    }
+                }
+            }
+
+        })
+
+    }
+
+
+
+
+
+
+
+</script>
+
+{% endblock %}

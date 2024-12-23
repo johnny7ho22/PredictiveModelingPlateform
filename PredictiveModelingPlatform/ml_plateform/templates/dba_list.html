@@ -1,0 +1,291 @@
+{% extends "layout.html"%}
+
+{% block fun %}
+<li><a href="/dba/user_list">員工管理區</a></li>
+<!-- <li><a href="/engineer/upload">資料上傳區</a></li> -->
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+
+    <div>
+        <input type="button" id="btnAdd" value="新增員工" class="btn btn-primary">
+    </div>
+    <br />
+
+    <!-- 跳出新增/編輯員工對話框 -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                            aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="myModalLabel"></h4>
+                </div>
+                <div class="modal-body">
+                    <form id="addForm" novalidate>
+                        <div class="clearfix">
+                            {% for filed in form %}
+                            <div class="col-xs-12">
+                                <div class="form-group" style="position: relative;">
+                                    <label>{{filed.label}}</label>
+                                    {{filed}}
+                                    <span class="error-msg" style="color: red; position: absolute;"></span>
+                                    <br />
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                    <button type="button" id="btnSave" class="btn btn-primary">保 存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 刪除員工對話框 -->
+    <div class="modal fade" id="deleteModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog" role="document">
+            <div class="alert alert-danger alert-dismissible fade in" role="alert">
+                <h4>是否確定刪除</h4>
+                <p style="margin: 10px 0;">所有相關數據都會被刪除，確定嗎？</p>
+                <p style="text-align: right;">
+                    <button type="button" id="btnConfirmDelete" class="btn btn-danger">確 定</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">取 消</button>
+                </p>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">
+            <span class="glyphicon glyphicon-th-list" aria-hidden="true"></span>
+            資料列表
+        </div>
+
+        <!-- Table -->
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    {% for field in fields_name %}
+                    <th>{{field}}</th>
+                    {% endfor %}
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in user_data%}
+                <tr>
+                    <td>{{row.id}}</td>
+                    <td>{{row.name}}</td>
+                    <td>{{row.password}}</td>
+                    <td>{{row.age}}</td>
+                    <td>{{row.job_title}}</td>
+                    <td>
+                        <input class="btn btn-primary btn-xs btn-edit" type="button" value="編輯" uid="{{row.id}}">
+                        <input class="btn btn-danger btn-xs btn-delete" type="button" value="刪除" uid="{{row.id}}">
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="clearfix">
+        <ul class="pagination">
+            {{ page_string }}
+        </ul>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript">
+    var DELETE_ID;
+    var EDIT_ID;
+
+    $(function () {
+        bindBtnAddEvent();
+        bindBtnSaveEvent();
+        bindBtnDeleteEvent();
+        bindBtnConfirmDeleteEvent();
+        bindBtnEditEvent();
+    })
+
+    function bindBtnAddEvent() {
+        $("#btnAdd").click(function () {
+            //EDIT_ID設置為空
+            EDIT_ID = undefined;
+
+            //清空對話框數值
+            $("#addForm")[0].reset();
+
+            //設置對話框的標題
+            $("#myModalLabel").text("新增訂單")
+
+            //點擊新建按鈕，並顯示對話框
+            $("#myModal").modal('show') //此是v3.com裏面的
+        })
+    }
+
+    function bindBtnSaveEvent() {
+        $("#btnSave").click(function () {
+
+            //清除所有錯誤訊息
+            $(".error-msg").empty()
+
+            //編輯  
+            if (EDIT_ID) {
+                doEdit()
+            }
+            else { //新增
+                doAdd()
+            }
+        })
+    }
+
+
+    function doAdd() {
+        //向後台發送請求
+        $.ajax({
+            url: "/dba/user_add/",
+            type: "post",
+            data: $("#addForm").serialize(),
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    // alert("添加訂單成功");
+                    //清空表單    $("#addForm")是jQuery物件， $("#addForm")是dom物件
+                    $("#addForm")[0].reset()
+
+                    //關閉對話框
+                    $("#myModal").modal('hide')
+
+                    //刷新頁面
+                    location.reload()
+                }
+                else {
+                    $.each(res.error, function (name, errorList) {
+                        $("#id_" + name).next().text(errorList[0])
+                    })
+                }
+            }
+        })
+    }
+
+
+    function bindBtnDeleteEvent() {
+        $(".btn-delete").click(function () {
+            //顯示刪除的對話框
+            $("#deleteModal").modal("show");
+
+            //獲取當前行的id，並賦值給全域變數
+            DELETE_ID = $(this).attr("uid")
+
+        })
+    }
+
+    function bindBtnConfirmDeleteEvent() {
+        $("#btnConfirmDelete").click(function () {
+            //點擊確認刪除按鈕，將全域變數中設置的刪除ID發送到後台
+
+            $.ajax({
+                url: '/dba/user_delete/',
+                type: "GET",
+                data: {
+                    uid: DELETE_ID
+                },
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        //頁面重新整理
+                        location.reload();
+                    }
+                    else {
+                        alert(res.error);
+                    }
+                }
+            })
+        })
+    }
+
+
+    function bindBtnEditEvent() {
+        $(".btn-edit").click(function () {
+            //清空對話框數值
+            $("#addForm")[0].reset();
+
+            // 修改對話框的標題
+            $('#myModalLabel').text("編輯訂單")
+
+            var uid = $(this).attr("uid");
+            EDIT_ID = uid;
+
+            //發送ajax向後台獲取當前資料
+            $.ajax({
+                url: "/dba/edit_detail/",
+                type: "get",
+                data: {
+                    uid: uid
+                },
+                dataType: "JSON",
+                success: function (res) {
+                    if (res.status) {
+                        //將數據賦值到對話框的標籤當中
+                        $.each(res.data, function (name, value) {
+                            $("#id_" + name).val(value);
+                        })
+
+                        $('#myModal').modal("show");
+                    }
+                    else {
+                        alert(res.error);
+                    }
+                }
+            })
+
+
+        })
+    }
+
+    function doEdit() {
+        //向後台發送請求
+        $.ajax({
+            url: "/dba/user_edit/" + "?uid=" + EDIT_ID,
+            type: "post",
+            data: $("#addForm").serialize(),
+            dataType: "JSON",
+            success: function (res) {
+                if (res.status) {
+                    //清空表單    $("#addForm")是jQuery物件， $("#addForm")是dom物件
+                    $("#addForm")[0].reset();
+
+                    //關閉對話框
+                    $("#myModal").modal('hide');
+
+                    //刷新頁面
+                    location.reload();
+                }
+                else {
+                    if (res.tips) {
+                        alert(res.tips);
+                    } else {
+                        $.each(res.error, function (name, errorList) {
+                            $("#id_" + name).next().text(errorList[0]);
+                        })
+                    }
+                }
+            }
+        })
+    }
+</script>
+{% endblock %}
