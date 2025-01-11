@@ -80,10 +80,10 @@ DATABASES = {
 
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ml_plateform', #資料庫的名字
+        'NAME': 'heartfailure', #資料庫的名字
         'USER':'root',
-        'PASSWORD':'lin17722',
-        'HOST':'127.0.0.1', #哪台機器安裝了mysql
+        'PASSWORD':'123',
+        'HOST':'db', 
         'PORT':3306,
     }
 }
